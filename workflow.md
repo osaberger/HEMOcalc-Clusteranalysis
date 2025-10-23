@@ -3,10 +3,11 @@
 This is the structure of the main file:
 
 ### Structure
-| **Name** | name ; id ; center ; date_v0, date_v1, tto_v1; ltfu, transplant, death_v1, date_ltfu, date_transplant, date_death, tto_ltfu, tto_transplant, tto_death |
-|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Class** | string, numeric, string; date, numeric; logical, date, numeric |
-| **Information** | Patient identifier, ID number, and center code (1–4); Baseline and follow-up dates (yyyy-mm-dd) and time to visit 1 in days; Status indicators (TRUE/FALSE), corresponding event dates (yyyy-mm-dd), and time-to-event values (days) |
+| **Name** | **id** | **center** | **date_v0** | **date_v1** | **tto_v1** | **ltfu** | **transplant** | **death_v1** | **date_ltfu** | **date_transplant** | **date_death** | **tto_ltfu** | **tto_transplant** | **tto_death** |
+|-----------|---------|-------------|--------------|--------------|-------------|------------|----------------|---------------|----------------|--------------------|----------------|----------------|--------------------|---------------|
+| **Class** | string | string | date | date | numeric | logical | logical | logical | date | date | date | numeric | numeric | numeric |
+| **Information** | Patient identifier | ID number | Baseline date (yyyy-mm-dd) | Follow-up date (yyyy-mm-dd) | Time to visit 1 (days) | Lost to follow-up (TRUE/FALSE) | Transplant (TRUE/FALSE) | Death at visit 1 (TRUE/FALSE) | Date of LTFU | Date of transplant | Date of death | Time to LTFU (days) | Time to transplant (days) | Time to death (days) |
+
 
 
 
