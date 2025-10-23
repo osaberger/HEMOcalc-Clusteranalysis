@@ -3,9 +3,10 @@
 This is the structure of the main file:
 
 ### Structure
-| **Variable** | id | center |
-| **Type** | numeric | string |
-| **Information** | ID number | 1, 2, 3, 4 |
+| **Variable** |---------------|
+| **Type** |-----------|
+| **Information** |-----------------|
+
 |---------------|-----------|-----------------|
 | name, id, center | string, numeric, string | Patient identifier, ID number, and center code (1–4) |
 | date_v0, date_v1, tto_v1 | date, numeric | Baseline and follow-up dates (yyyy-mm-dd) and time to visit 1 in days |
