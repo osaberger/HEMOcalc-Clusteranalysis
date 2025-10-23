@@ -1,9 +1,6 @@
 # Workflow
 
-## 1. General Data preprocessing; not provided in this repository
-**Files:** `original_data.csv`
-- Apply general data cleaning and time-to-event calculation
-- Saves result as `data_clean.csv` with the structure depicted above
+This is the structure of the main file:
 
 ### Structure
 | Variable | Type | Information |
