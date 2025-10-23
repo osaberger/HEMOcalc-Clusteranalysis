@@ -3,8 +3,8 @@
 This is the structure of the main file:
 
 ### Structure
-| Variable | Type | Information |
-|-----------|------|-------------|
+| **Variable** | **Type** | **Information** |
+|---------------|-----------|-----------------|
 | name, id, center | string, numeric, string | Patient identifier, ID number, and center code (1–4) |
 | date_v0, date_v1, tto_v1 | date, numeric | Baseline and follow-up dates (yyyy-mm-dd) and time to visit 1 in days |
 | ltfu, transplant, death_v1, date_ltfu, date_transplant, date_death, tto_ltfu, tto_transplant, tto_death | logical, date, numeric | Status indicators (TRUE/FALSE), corresponding event dates (yyyy-mm-dd), and time-to-event values (days) |
