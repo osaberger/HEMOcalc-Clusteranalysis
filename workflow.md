@@ -8,14 +8,10 @@
 ### Structure
 | Variable | Type | Description |
 |-----------|------|-------------|
-| name | string | Patient identifier |
-| id | numeric | ID number |
-| center | string | 1, 2, 3, 4 |
-| date v0, v1 | date | yyyy-mm-dd |
-| tto v1 | numeric | Days |
-| ltfu, transplant, death at visit 1 | logical | TRUE/FALSE |
-| date ltfu, transplant, death | date | yyyy-mm-dd |
-| tto ltfu, transplant, death | numeric | Days |
+| name, id, center | string, numeric, string | Patient identifier, ID number, and center code (1–4) |
+| date_v0, date_v1, tto_v1 | date, numeric | Baseline and follow-up dates (yyyy-mm-dd) and time to visit 1 in days |
+| ltfu, transplant, death_v1, date_ltfu, date_transplant, date_death, tto_ltfu, tto_transplant, tto_death | logical, date, numeric | Status indicators (TRUE/FALSE), corresponding event dates (yyyy-mm-dd), and time-to-event values (days) |
+
 
 | age | numeric | Age in years |
 | gender | string | Male/Female |
