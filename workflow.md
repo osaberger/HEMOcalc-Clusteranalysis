@@ -6,7 +6,7 @@
 - Saves result as `data_clean.csv` with the structure depicted above
 
 ### Structure
-| Variable | Type | Description |
+| Variable | Type | Information |
 |-----------|------|-------------|
 | name, id, center | string, numeric, string | Patient identifier, ID number, and center code (1–4) |
 | date_v0, date_v1, tto_v1 | date, numeric | Baseline and follow-up dates (yyyy-mm-dd) and time to visit 1 in days |
