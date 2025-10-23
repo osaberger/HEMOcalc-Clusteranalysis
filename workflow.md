@@ -33,8 +33,9 @@
                      
 ---
 
-## 2. Clusteranalysis— `cluster_generation.Rmd`
-- Imports `data_clean.csv`
+## 1. Clusteranalysis— `cluster_generation.Rmd`
+- *Not provided: Apply general data cleaning and time-to-event calculation to export `data_clean.csv`*
+- The code starts with importing `data_clean.csv`
 - Performs Winsorization, z-normalisation and manhattan distance calculation
 - Determines optimal clustering solution (Silhouette width)
 - Determins cluster stability via bootstrap analysis
