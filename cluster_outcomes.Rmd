@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Comparison of outcomes and covariates between Clusters
 
+# Import and list relevant libraries
 library(survival)
 library(survminer)
 library(rstatix)
@@ -31,9 +32,9 @@ oneyear_analysisdata <- oneyear_analysisdata %>%
   )
 
 # 2. Relabel cluster levels (for legend clarity)
-oneyear_analysisdata$cluster_pam <- factor(
-  oneyear_analysisdata$cluster_pam,
-  labels = paste("Cluster", 1:length(unique(oneyear_analysisdata$cluster_pam)))
+oneyear_analysisdata$cluster_pamGOWER <- factor(
+  oneyear_analysisdata$cluster_pamGOWER,
+  labels = paste("Cluster", 1:length(unique(oneyear_analysisdata$cluster_pamGOWER)))
 )
 
 # and create survival object
@@ -43,7 +44,7 @@ surv_objPAM <- Surv(
 )
 
 # 4. Fit KM model
-km_fit_pam <- survfit(surv_objPAM ~ cluster_pam, data = oneyear_analysisdata)
+km_fit_pam <- survfit(surv_objPAM ~ cluster_pamGOWER, data = oneyear_analysisdata)
 
 # 5. Plot KM curve
 km_plot_pam <- ggsurvplot(
@@ -51,7 +52,7 @@ km_plot_pam <- ggsurvplot(
   data = oneyear_analysisdata,
   palette = c("#1b9e77", "#d95f02", "red", "#7570b3"),
   legend.title = "Cluster",
-  legend.labs = levels(oneyear_analysisdata$cluster_pam),
+  legend.labs = levels(oneyear_analysisdata$cluster_pamGOWER),
   risk.table = TRUE,
   xlim = c(0, 365),                         # Limit to 365 days
   break.time.by = 90,                       # Tick marks at 0, 90, 180, 270, 360
@@ -91,7 +92,7 @@ oneyear_analysisdata <- oneyear_analysisdata %>%
     ftime = pmin(tto_death1, tto_kt1, 365, na.rm = TRUE)
   )
 
-cuminc_death <- cuminc(ftime   = oneyear_analysisdata$ftime, fstatus = oneyear_analysisdata$fstatus, group   = oneyear_analysisdata$cluster_pam)
+cuminc_death <- cuminc(ftime   = oneyear_analysisdata$ftime, fstatus = oneyear_analysisdata$fstatus, group   = oneyear_analysisdata$cluster_pamGOWER)
 print(cuminc_death)
 
 # This process is repeated for `Cause-specific death`, `MACE`, `Interventions for ASCVD`, `Hospitalisation for Heart failure`, `Hospitalisation for infections` and `Fractures`
