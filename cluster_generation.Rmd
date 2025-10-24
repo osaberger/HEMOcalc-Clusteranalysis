@@ -11,9 +11,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## PAM Cluster analysis for one-year FU data 
 
-renv::install(c("factoextra", "fmsb", "scales", "cluster", "DescTools",
-                "fpc", "ggcorrplot"))
-
 library(tidyverse)
 library(cluster)
 library(factoextra)
