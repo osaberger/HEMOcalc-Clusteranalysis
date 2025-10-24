@@ -5,13 +5,11 @@ author: Simon Aberger
 date: "2025-10-23"
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 ## Comparison of outcomes and covariates between Clusters
 
 # Import and list relevant libraries
+```{r echo=FALSE}
 library(survival)
 library(survminer)
 library(rstatix)
@@ -19,11 +17,15 @@ library(tidyverse)
 library(cmprsk)
 library(MASS)
 library(viridis)
+````
 
 # Load results
+```{r echo=FALSE}
 load("cluster_results.RData")
+```
 
 ## Step 1: Kaplan-Meier Survival Analysis (cesnored for KT) between PAM clusters
+```{r echo=FALSE}
 # 1. Get events
 oneyear_analysisdata <- oneyear_analysisdata %>%
   mutate(
@@ -77,10 +79,11 @@ km_plot_pam$plot <- km_plot_pam$plot +
   scale_x_continuous(breaks = c(0, 90, 180, 270, 365)) # Adjust x-axis ticks
 
 print(km_plot_pam) # Show plot
-
+```
 
 
 ## Step 2: CIF for secondary outcomes with competing events:
+```{r echo=FALSE}
 # 1. All-cause death
 oneyear_analysisdata <- oneyear_analysisdata %>%
   mutate(
@@ -94,12 +97,14 @@ oneyear_analysisdata <- oneyear_analysisdata %>%
 
 cuminc_death <- cuminc(ftime   = oneyear_analysisdata$ftime, fstatus = oneyear_analysisdata$fstatus, group   = oneyear_analysisdata$cluster_pamGOWER)
 print(cuminc_death)
+```
 
 # This process is repeated for `Cause-specific death`, `MACE`, `Interventions for ASCVD`, `Hospitalisation for Heart failure`, `Hospitalisation for infections` and `Fractures`
 
 
 
 ## Step 3: Incremental prediction model to test impact of cluster membership on the primary endpoint (death)
+```{r echo=FALSE}
 # 1. Prepare Fine-Gray time and event variables
 oneyear_analysisdata <- oneyear_analysisdata %>%
   mutate(
@@ -149,3 +154,4 @@ summary(fg_model2)
 summary(fg_model3)
 summary(fg_model4)
 summary(fg_model5)
+```
