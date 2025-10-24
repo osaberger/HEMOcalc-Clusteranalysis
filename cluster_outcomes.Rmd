@@ -11,8 +11,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Comparison of outcomes and covariates between Clusters
 
-renv::install(c("survival", "survminer", "cmprsk", "MASS"))
-
 library(survival)
 library(survminer)
 library(rstatix)
