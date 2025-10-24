@@ -7,13 +7,12 @@ General data cleaning and time-to-event calculation are applied to export a clea
 This file serves as the input for all downstream analyses.
 
 ### Structure
-| **Name** | **id** | **center** | **baseline** | **visit 1** | **FU time** | **ltfu** | **transplant** | **death** | **date ltfu** | **date transplant** | **date death** | **timeto ltfu** | **timeto transplant** | **timeto death** | **age** | **gender** | **bmi** |**dialysis vintage** | **dialysis access** | **dialysis dose** | **blood flow** | rkf | ktv| iPTH | noxPTH | beta crosslaps | opg | imanox | perox | srankl | hscrp |
-|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|-----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|
+
+| **Name** | **id** | **center** | **baseline** | **visit 1** | **FU time** | **ltfu** | **transplant** | **death** | **date ltfu** | **date transplant** | **date death** | **timeto ltfu** | **timeto transplant** | **timeto death** | **age** | **gender** | **bmi** | **dialysis vintage** | **dialysis access** | **dialysis dose** | **blood flow** | **rkf** | **ktv** | **iPTH** | **noxPTH** | **beta crosslaps** | **opg** | **imanox** | **perox** | **srankl** | **hscrp** |
+|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
 | **Class** | string | string | date | date | numeric | logical | logical | logical | date | date | date | numeric | numeric | numeric | numeric | string | numeric | numeric | string | numeric | numeric | numeric | numeric | numeric | numeric | numeric | numeric | numeric | numeric | numeric | numeric |
-| **Information** | Patient identifier | ID number | (yyyy-mm-dd) | (yyyy-mm-dd) | (days) | (TRUE/FALSE) | (TRUE/FALSE) | (TRUE/FALSE) | (yyyy-mm-dd) | (yyyy-mm-dd) | (yyyy-mm-dd) | (days) | (days) | (days) | (years) | (MALE/FEMALE) | VALUE | (months) | (CATH/AVF) | (h per week) | (mL/min) | (mL/day) | VALUE | (pg/mL) | (pg/mL) | (ng/mL) | (pmoL/mL) | (µmoL/mL) | (µmoL/mL) | (ng/mL) | (mg/L) |
+| **Information** | Patient identifier | ID number | (yyyy-mm-dd) | (yyyy-mm-dd) | (days) | TRUE/FALSE | TRUE/FALSE | TRUE/FALSE | (yyyy-mm-dd) | (yyyy-mm-dd) | (yyyy-mm-dd) | (days) | (days) | (days) | (years) | MALE/FEMALE | value | (months) | CATH/AVF | (h per week) | (mL/min) | (mL/day) | value | (pg/mL) | (pg/mL) | (ng/mL) | (pmoL/mL) | (µmoL/mL) | (µmoL/mL) | (ng/mL) | (mg/L) |
 
-
-                     
 ---
 
 ## 1. Cluster Analysis — `cluster_generation.Rmd`
