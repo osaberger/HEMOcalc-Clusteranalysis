@@ -3,16 +3,15 @@
 This is the structure of the main file:
 
 ### Structure
-| **Name** | **id** | **center** | **date v0** | **date v1** | **FU time** | **ltfu** | **transplant** | **death** | **date ltfu, transplant, death** | **time to ltfu, transplant, death** | **age** | **gender** |
-|-----------|---------|-------------|--------------|--------------|-------------|------------|----------------|---------------|----------------|--------------------|----------------|----------------|
-| **Class** | string | string | date | date | numeric | logical | logical | logical | date | numeric | numeric | string |
-| **Information** | Patient identifier | ID number | (yyyy-mm-dd) | (yyyy-mm-dd) | (days) | (TRUE/FALSE) | (TRUE/FALSE) | (TRUE/FALSE) | (yyyy-mm-dd) | (days) | (years) | (M/F) |
+| **Name** | **id** | **center** | **baseline** | **visit 1** | **FU time** | **ltfu** | **transplant** | **death** | **date ltfu, transplant, death** | **time to ltfu, transplant, death** | **age** | **gender** | **bmi** |**dialysis vintage** | **dialysis access** | **dialysis dose** | **blood flow** | rkf | ktv| iPTH | noxPTH | beta crosslaps | opg | imanox | perox | srankl | hscrp |
+|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|-----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|----------------|
+| **Class** | string | string | date | date | numeric | logical | logical | logical | date | numeric | numeric | string | numeric | numeric | string | numeric | numeric | numeric | numeric | numeric | numeric | numeric | numeric | numeric | numeric | numeric | numeric |
+| **Information** | Patient identifier | ID number | (yyyy-mm-dd) | (yyyy-mm-dd) | (days) | (TRUE/FALSE) | (TRUE/FALSE) | (TRUE/FALSE) | (yyyy-mm-dd) | (days) | (years) | (MALE/FEMALE) | VALUE | (months) | (CATH/AVF) | (h per week) | (mL/min) | (mL/day) | VALUE | (pg/mL) | (pg/mL) | (ng/mL) | (pmoL/mL) | (µmoL/mL) | (µmoL/mL) | (ng/mL) | (mg/L) |
 
 
 
 
-| age | numeric | Age in years |
-| gender | string | Male/Female |
+
 | dialysis vintage  | numeric | vintage in months |
 | dialysis access
 | dialysis dose 
