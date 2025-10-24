@@ -6,11 +6,12 @@ date: "2025-10-23"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
-## PAM Cluster analysis for one-year FU data 
+## PAM Cluster analysis for one-year FU data
 
+<<<<<<< HEAD
 library(tidyverse)
 library(cluster)
 library(factoextra)
@@ -20,11 +21,32 @@ library(ggcorrplot)
 library(fmsb)
 library(scales)
 library(writexl)
+=======
+```{r packages}
+# Import and list relevant libraries
+  library(tidyverse)
+  library(cluster)
+  library(factoextra)
+  library(DescTools)
+  library(fpc)
+  library(ggcorrplot)
+  library(fmsb)
+  library(scales)
+  library(writexl)
+  library(here)
+```
 
-# Step 1: Import cleaned CSV-file and prepare
-oneyear_analysisdata <- read.csv("~/.../data_clean.csv")
+```{r params-and-data}
+### Set up working directory and import data
+oneyear_analysisdata <- read.csv("Cdata_clean.csv")
+```
+>>>>>>> ba1cef3 (Update cluster_outcomes and workflow files)
 
-# 1. Subset clustering variables (N = 7), Winsorize, and center-level standardization
+
+
+### Step 1: Subset clustering variables, Winsorize, and center-level standardization
+
+```{r prepare-clustering}
 clustering_variables <- oneyear_analysisdata %>%
   mutate(across(
     c(noxpth_v0, beta_crosslaps_v0, opg_v0,
@@ -40,14 +62,16 @@ clustering_variables <- oneyear_analysisdata %>%
       sd(as.numeric(.), na.rm = TRUE)
   )) %>%
   ungroup() %>%
-  dplyr::select(noxpth_v0, beta_crosslaps_v0, opg_v0,
+  dplyr::select(noxpthdil_v0, beta_crosslaps_v0, opg_v0,
          lmanox_v0, perox_v0, srankl_v0, crp_v0) %>%
   as.data.frame()
 
+```
 
+### Step 2: Distance computation and clustering
 
-## Step 2: Distance computation and clustering
-# 1. Apply gower distance matrix (equals standardized Manhattan distance on numeric variables)
+```{r distance-and-pam}
+# 1. Apply gower distance matrix (equals Manhattan on numeric variables)
 gower_dist <- daisy(clustering_variables, metric = "gower")
 
 # and determine optimal number of clusters (decided on 4 due to meaningful biological representation)
@@ -58,22 +82,24 @@ fviz_nbclust(clustering_variables, pam, diss = gower_dist, method = "silhouette"
   labs(title = "Silhouette Width for PAM (Gower)")
 
 # 2. Perform PAM clustering with k = 4
-pam_result <- pam(gower_dist, k = 4, diss = TRUE)
+pam_resultGOWER <- pam(gower_dist, k = 4, diss = TRUE)
 
 # and assign cluster labels to the dataset
-oneyear_analysisdata$cluster_pam <- as.factor(pam_result$clustering)
+oneyear_analysisdata$cluster_pamGOWER <- as.factor(pam_resultGOWER$clustering)
 
 # 3. Plot Silhouette
-fviz_silhouette(pam_result) +
+fviz_silhouette(pam_resultGOWER) +
   ggtitle("Silhouette Plot for PAM (k = 4, Gower)")
 
 # 4. Save final cluster assignment
-save(oneyear_analysisdata, pam_result, file = "cluster_results.RData")
+save(oneyear_analysisdata, pam_resultGOWER, file = "cluster_results.RData")
+```
 
+### Step 3: Cluster stability check with bootstrap
 
-
-## Step 3: Cluster stability check with bootstrap
-cb_result <- clusterboot(
+```{r cluster-stability}
+# clusterboot can be slow. For exploratory runs use B = 200. Increase to 1000+ for final stability estimates.
+b_result <- clusterboot(
   data = clustering_variables,
   B = 1000,
   clustermethod = pamkCBI,
@@ -83,13 +109,13 @@ cb_result <- clusterboot(
 )
 print(cb_result)
 cat("Mean bootstrap cluster stability:", mean(cb_result$bootmean), "\n")
+```
 
+### Step 4: Create radar charts for all clusters
 
-
-
-## Step 4: Create radar charts for all clusters:
+```{r radar-charts, fig.width=7, fig.height=5}
 # 1. Variables, colors and labels used for radar charts
-radarchart_vars <- c("noxpth_v0", "beta_crosslaps_v0",
+radarchart_vars <- c("noxpthdil_v0", "beta_crosslaps_v0",
                      "opg_v0", "lmanox_v0", "perox_v0", "srankl_v0", "crp_v0")
 custom_labels <- c("nox-PTH", "β-Crosslaps", "OPG", "lmAnOx", "PerOx", "sRANKL", "hsCRP")
 cluster_colors <- c("#1b9e77", "#d95f02", "red", "#7570b3")
@@ -98,11 +124,11 @@ oneyear_analysisdata_scaled <- oneyear_analysisdata %>%
 
 # 2. Compute cluster-wise mean z-scores
 cluster_means <- oneyear_analysisdata_scaled %>%
-  group_by(cluster_pam) %>%
+  group_by(cluster_pamGOWER) %>%
   summarise(across(all_of(radarchart_vars), ~ mean(.x, na.rm = TRUE))) %>%
   ungroup()
 
-cluster_labels <- paste("Cluster", cluster_means$cluster_pam)
+cluster_labels <- paste("Cluster", cluster_means$cluster_pamGOWER)
 n_clusters <- nrow(cluster_means)
 
 # 3. Individual radar charts per cluster
@@ -131,5 +157,9 @@ for (i in seq_len(n_clusters)) {
     title = cluster_labels[i]
   )
 }
+```
 
-
+```{r session-info, echo=TRUE}
+# Reproducibility: include session info at the end of the doc
+sessionInfo()
+```
