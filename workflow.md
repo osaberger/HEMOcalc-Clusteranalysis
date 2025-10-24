@@ -4,9 +4,9 @@ This is the structure of the main file:
 
 ### Structure
 | **Name** | **id** | **center** | **date v0** | **date v1** | **FU time** | **ltfu** | **transplant** | **death** | **date ltfu, transplant, death** | **time to ltfu, transplant, death** | **age** | **gender** |
-|-----------|---------|-------------|--------------|--------------|-------------|------------|----------------|---------------|----------------|--------------------|----------------|----------------|--------------------|---------------|
+|-----------|---------|-------------|--------------|--------------|-------------|------------|----------------|---------------|----------------|--------------------|----------------|----------------|
 | **Class** | string | string | date | date | numeric | logical | logical | logical | date | numeric | numeric | string |
-| **Information** | Patient identifier | ID number | (yyyy-mm-dd) | (yyyy-mm-dd) | (days) | (TRUE/FALSE) | Date of LTFU | Date of transplant | (yyyy-mm-dd) | (days) | (years) | (M/F) |
+| **Information** | Patient identifier | ID number | (yyyy-mm-dd) | (yyyy-mm-dd) | (days) | (TRUE/FALSE) | (TRUE/FALSE) | (TRUE/FALSE) | (yyyy-mm-dd) | (days) | (years) | (M/F) |
 
 
 
