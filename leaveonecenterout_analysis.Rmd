@@ -11,8 +11,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Sensitivity analysis: Leave one center out (LOCO)
 
-renv::install(c("clue", "janitor", "ggalluvial"))
-
 library(tidyverse)
 library(cluster)
 library(DescTools)     # For Winsorize
@@ -20,7 +18,6 @@ library(mclust)        # For adjustedRandIndex
 library(clue)          # For solve_LSAP (Hungarian algorithm)
 library(janitor)       # For adorn_rounding
 library(purrr)         # For map_dfr
-
 library(factoextra)
 library(fpc)
 library(ggcorrplot)
