@@ -1,0 +1,138 @@
+---
+title: "cluster_generation"
+output: html_document
+author: Simon Aberger
+date: "2025-10-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## PAM Cluster analysis for one-year FU data 
+
+renv::install(c("factoextra", "fmsb", "scales", "cluster", "DescTools",
+                "fpc", "ggcorrplot"))
+
+library(tidyverse)
+library(cluster)
+library(factoextra)
+library(DescTools)
+library(fpc)
+library(ggcorrplot)
+library(fmsb)
+library(scales)
+library(writexl)
+
+# Step 1: Import cleaned CSV-file and prepare
+oneyear_analysisdata <- read.csv("~/.../data_clean.csv")
+
+# 1. Subset clustering variables (N = 7), Winsorize, and center-level standardization
+clustering_variables <- oneyear_analysisdata %>%
+  mutate(across(
+    c(noxpth_v0, beta_crosslaps_v0, opg_v0,
+      lmanox_v0, perox_v0, srankl_v0, crp_v0),
+    ~ DescTools::Winsorize(as.numeric(.),
+                           val = quantile(as.numeric(.), probs = c(0.01, 0.99), na.rm = TRUE))
+  )) %>%
+  group_by(center) %>%
+  mutate(across(
+    c(noxpth_v0, beta_crosslaps_v0, opg_v0,
+      lmanox_v0, perox_v0, srankl_v0, crp_v0),
+    ~ (as.numeric(.) - mean(as.numeric(.), na.rm = TRUE)) /
+      sd(as.numeric(.), na.rm = TRUE)
+  )) %>%
+  ungroup() %>%
+  dplyr::select(noxpth_v0, beta_crosslaps_v0, opg_v0,
+         lmanox_v0, perox_v0, srankl_v0, crp_v0) %>%
+  as.data.frame()
+
+
+
+## Step 2: Distance computation and clustering
+# 1. Apply gower distance matrix (equals standardized Manhattan distance on numeric variables)
+gower_dist <- daisy(clustering_variables, metric = "gower")
+
+# and determine optimal number of clusters (decided on 4 due to meaningful biological representation)
+fviz_nbclust(clustering_variables, pam, diss = gower_dist, method = "wss") +
+  labs(title = "Elbow Method for PAM (Gower)")
+
+fviz_nbclust(clustering_variables, pam, diss = gower_dist, method = "silhouette") +
+  labs(title = "Silhouette Width for PAM (Gower)")
+
+# 2. Perform PAM clustering with k = 4
+pam_result <- pam(gower_dist, k = 4, diss = TRUE)
+
+# and assign cluster labels to the dataset
+oneyear_analysisdata$cluster_pam <- as.factor(pam_result$clustering)
+
+# 3. Plot Silhouette
+fviz_silhouette(pam_result) +
+  ggtitle("Silhouette Plot for PAM (k = 4, Gower)")
+
+# 4. Save final cluster assignment
+save(oneyear_analysisdata, pam_result, file = "cluster_results.RData")
+
+
+
+## Step 3: Cluster stability check with bootstrap
+cb_result <- clusterboot(
+  data = clustering_variables,
+  B = 1000,
+  clustermethod = pamkCBI,
+  krange = 4,
+  seed = 123,
+  count = TRUE
+)
+print(cb_result)
+cat("Mean bootstrap cluster stability:", mean(cb_result$bootmean), "\n")
+
+
+
+
+## Step 4: Create radar charts for all clusters:
+# 1. Variables, colors and labels used for radar charts
+radarchart_vars <- c("noxpth_v0", "beta_crosslaps_v0",
+                     "opg_v0", "lmanox_v0", "perox_v0", "srankl_v0", "crp_v0")
+custom_labels <- c("nox-PTH", "β-Crosslaps", "OPG", "lmAnOx", "PerOx", "sRANKL", "hsCRP")
+cluster_colors <- c("#1b9e77", "#d95f02", "red", "#7570b3")
+oneyear_analysisdata_scaled <- oneyear_analysisdata %>%
+  mutate(across(all_of(radarchart_vars), scale))
+
+# 2. Compute cluster-wise mean z-scores
+cluster_means <- oneyear_analysisdata_scaled %>%
+  group_by(cluster_pam) %>%
+  summarise(across(all_of(radarchart_vars), ~ mean(.x, na.rm = TRUE))) %>%
+  ungroup()
+
+cluster_labels <- paste("Cluster", cluster_means$cluster_pam)
+n_clusters <- nrow(cluster_means)
+
+# 3. Individual radar charts per cluster
+for (i in seq_len(n_clusters)) {
+  radar_single_cluster <- rbind(
+    rep(2, length(radarchart_vars)),
+    rep(-2, length(radarchart_vars)),
+    cluster_means[i, -1]
+  )
+  rownames(radar_single_cluster) <- c("Max", "Min", cluster_labels[i])
+  colnames(radar_single_cluster) <- custom_labels
+  
+  par(mar = c(2, 2, 4, 2))
+  radarchart(
+    radar_single_cluster,
+    axistype = 1,
+    pcol = cluster_colors[i],
+    pfcol = alpha(cluster_colors[i], 0.1),
+    plwd = 2,
+    plty = 1,
+    cglcol = "grey",
+    cglty = 1,
+    axislabcol = "black",
+    caxislabels = c("-2", "-1", "0", "+1", "+2"),
+    vlcex = 0.9,
+    title = cluster_labels[i]
+  )
+}
+
+

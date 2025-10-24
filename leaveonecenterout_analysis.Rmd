@@ -1,0 +1,213 @@
+---
+title: "leaveonecenterout_analysis"
+output: html_document
+author: Simon Aberger
+date: "2025-10-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Sensitivity analysis: Leave one center out (LOCO)
+
+renv::install(c("clue", "janitor", "ggalluvial"))
+
+library(tidyverse)
+library(cluster)
+library(DescTools)     # For Winsorize
+library(mclust)        # For adjustedRandIndex
+library(clue)          # For solve_LSAP (Hungarian algorithm)
+library(janitor)       # For adorn_rounding
+library(purrr)         # For map_dfr
+
+library(factoextra)
+library(fpc)
+library(ggcorrplot)
+library(fmsb)
+library(scales)
+library(writexl)
+library(ggalluvial)
+
+# Set random seed and define variables:
+set.seed(1)
+vars <- c("noxpth_v0", "beta_crosslaps_v0", "opg_v0",
+          "lmanox_v0", "perox_v0", "srankl_v0", "crp_v0")
+
+## Step 1: Define helper function to preprocess training and test data
+# 1. Set up training data for centers:
+prep_data <- function(train_df, test_df, vars) {
+  train_w <- train_df %>%
+    dplyr::select(all_of(vars)) %>%
+    mutate(across(everything(), ~ Winsorize(as.numeric(.),
+                                            val = quantile(as.numeric(.),
+                                                           probs = c(0.01, 0.99),
+                                                           na.rm = TRUE)))) 
+  
+  means <- sapply(train_w, mean, na.rm = TRUE)
+  sds   <- sapply(train_w, sd,   na.rm = TRUE)
+  
+  z_train <- as.data.frame(scale(train_w, center = means, scale = sds))
+  
+  test_w <- test_df %>%
+    dplyr::select(all_of(vars)) %>%
+    mutate(across(everything(), ~ Winsorize(as.numeric(.),
+                                            val = quantile(as.numeric(train_w[[cur_column()]]),
+                                                           probs = c(0.01, 0.99),
+                                                           na.rm = TRUE))))
+  
+  z_test <- sweep(test_w, 2, means, FUN = "-")
+  z_test <- sweep(z_test, 2, sds,   FUN = "/")
+  z_test <- as.data.frame(z_test)
+  
+  list(z_train = z_train, z_test = z_test, means = means, sds = sds)
+}
+
+# 2. Define helper function to assign clusters to new observations
+predict_pam <- function(newdata, pam_obj, train_z) {
+  medoid_ids <- pam_obj$medoids
+  medoids    <- train_z[medoid_ids, , drop = FALSE]
+  
+  comb <- rbind(medoids, newdata)
+  d    <- daisy(comb, metric = "gower")
+  dmat <- as.matrix(d)
+  
+  m <- nrow(medoids)
+  d_to_medoids <- dmat[1:m, (m+1):nrow(dmat), drop = FALSE]
+  apply(d_to_medoids, 2, which.min)
+}
+
+
+
+## Step 2: Cluster the full dataset (used as reference in ARI comparisons)
+clustering_variables_full <- oneyear_analysisdata %>%
+  dplyr::select(all_of(vars)) %>%
+  mutate(across(everything(), ~ Winsorize(as.numeric(.),
+                                          val = quantile(as.numeric(.),
+                                                         probs = c(0.01, 0.99),
+                                                         na.rm = TRUE)))) %>%
+  mutate(across(everything(), ~ as.numeric(scale(.)))) %>%
+  as.data.frame()
+
+gower_full <- daisy(clustering_variables_full, metric = "gower")
+pam_full   <- pam(gower_full, k = 4, diss = TRUE)
+oneyear_analysisdata$cluster_full <- factor(pam_full$clustering)
+
+
+
+## Step 3: Leave-One-Center-Out (LOCO) validation of clustering stability
+centers <- sort(unique(oneyear_analysisdata$center))
+
+results <- map_dfr(centers, function(ct) {
+  train_idx <- which(oneyear_analysisdata$center != ct)
+  test_idx  <- setdiff(seq_len(nrow(oneyear_analysisdata)), train_idx)
+  
+  train_df <- oneyear_analysisdata[train_idx, ]
+  test_df  <- oneyear_analysisdata[test_idx, ]
+  
+  prep     <- prep_data(train_df, test_df, vars)
+  
+  gower_train <- daisy(prep$z_train, metric = "gower")
+  pam_train   <- pam(gower_train, k = 4, diss = TRUE)
+  
+  full_train_labels <- oneyear_analysisdata$cluster_full[train_idx]
+  tab <- table(full_train_labels, pam_train$clustering)
+  map_vec <- solve_LSAP(t(tab), maximum = TRUE)
+  
+  mapped_train <- map_vec[pam_train$clustering]
+  ari_train <- adjustedRandIndex(as.integer(full_train_labels), mapped_train)
+  
+  pred_test_raw <- predict_pam(prep$z_test, pam_train, prep$z_train)
+  mapped_test   <- map_vec[pred_test_raw]
+  ari_test <- adjustedRandIndex(
+    as.integer(oneyear_analysisdata$cluster_full[test_idx]),
+    mapped_test
+  )
+  
+  sil      <- silhouette(pam_train)
+  mean_sil <- mean(sil[, "sil_width"])
+  
+  tibble(
+    center_left_out = ct,
+    n_train         = length(train_idx),
+    n_test          = length(test_idx),
+    ARI_train_vs_full = ari_train,
+    ARI_test_vs_full  = ari_test,
+    mean_sil_train    = mean_sil
+  )
+})
+
+results %>% adorn_rounding(digits = 3)
+
+
+
+## Step 4: Solution - Standardize lab markers within each center
+# 1. Center-standardize lab markers within each center
+oneyear_analysisdata_centered <- oneyear_analysisdata %>%
+  group_by(center) %>%
+  mutate(across(all_of(vars), ~ (as.numeric(.) - mean(as.numeric(.), na.rm = TRUE)) / 
+                  sd(as.numeric(.), na.rm = TRUE))) %>%
+  ungroup()
+
+# 2. Prepare full dataset and cluster: 
+clustering_variables_full <- oneyear_analysisdata_centered %>%
+  dplyr::select(all_of(vars)) %>%
+  mutate(across(everything(), ~ Winsorize(as.numeric(.),
+                                          val = quantile(as.numeric(.), probs = c(0.01, 0.99), na.rm = TRUE)))) %>%
+  as.data.frame()
+
+gower_full <- daisy(clustering_variables_full, metric = "gower")
+pam_full   <- pam(gower_full, k = 4, diss = TRUE)
+oneyear_analysisdata_centered$cluster_full <- factor(pam_full$clustering)
+
+# 3. Define centers for leave-one-center-out (LOCO) validation
+centers <- sort(unique(oneyear_analysisdata_centered$center))
+
+# and perform LOCO clustering validation
+results_centered <- map_dfr(centers, function(ct) {
+  train_idx <- which(oneyear_analysisdata_centered$center != ct)
+  test_idx  <- setdiff(seq_len(nrow(oneyear_analysisdata_centered)), train_idx)
+  
+  train_df <- oneyear_analysisdata_centered[train_idx, ]
+  test_df  <- oneyear_analysisdata_centered[test_idx, ]
+  
+  # Preprocess training/test sets (Winsorize, scale)
+  prep     <- prep_data(train_df, test_df, vars)
+  
+  # Train PAM on training set
+  gower_train <- daisy(prep$z_train, metric = "gower")
+  pam_train   <- pam(gower_train, k = 4, diss = TRUE)
+  
+  # Match trained clusters to full-dataset cluster labels
+  full_train_labels <- oneyear_analysisdata_centered$cluster_full[train_idx]
+  tab <- table(full_train_labels, pam_train$clustering)
+  map_vec <- solve_LSAP(t(tab), maximum = TRUE)
+  
+  # Evaluate training and test ARI
+  mapped_train <- map_vec[pam_train$clustering]
+  ari_train <- adjustedRandIndex(as.integer(full_train_labels), mapped_train)
+  
+  pred_test_raw <- predict_pam(prep$z_test, pam_train, prep$z_train)
+  mapped_test   <- map_vec[pred_test_raw]
+  ari_test <- adjustedRandIndex(
+    as.integer(oneyear_analysisdata_centered$cluster_full[test_idx]),
+    mapped_test
+  )
+  
+  # Compute silhouette score
+  sil      <- silhouette(pam_train)
+  mean_sil <- mean(sil[, "sil_width"])
+  
+  tibble(
+    center_left_out = ct,
+    n_train         = length(train_idx),
+    n_test          = length(test_idx),
+    ARI_train_vs_full = ari_train,
+    ARI_test_vs_full  = ari_test,
+    mean_sil_train    = mean_sil
+  )
+})
+
+# 6. View rounded validation metrics
+results_centered %>% adorn_rounding(digits = 3)
+

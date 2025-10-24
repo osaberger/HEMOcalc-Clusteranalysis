@@ -1,0 +1,152 @@
+---
+title: "cluster_outcomes"
+output: html_document
+author: Simon Aberger
+date: "2025-10-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Comparison of outcomes and covariates between Clusters
+
+renv::install(c("survival", "survminer", "cmprsk", "MASS"))
+
+library(survival)
+library(survminer)
+library(rstatix)
+library(tidyverse)
+library(cmprsk)
+library(MASS)
+library(viridis)
+
+# Load results
+load("cluster_results.RData")
+
+## Step 1: Kaplan-Meier Survival Analysis (cesnored for KT) between PAM clusters
+# 1. Get events
+oneyear_analysisdata <- oneyear_analysisdata %>%
+  mutate(
+    time_to_event = pmin(tto_death1, tto_kt1, 365, na.rm = TRUE),
+    event = if_else(death_v1 == 1, 1, 0)
+  )
+
+# 2. Relabel cluster levels (for legend clarity)
+oneyear_analysisdata$cluster_pam <- factor(
+  oneyear_analysisdata$cluster_pam,
+  labels = paste("Cluster", 1:length(unique(oneyear_analysisdata$cluster_pam)))
+)
+
+# and create survival object
+surv_objPAM <- Surv(
+  time = oneyear_analysisdata$time_to_event,
+  event = oneyear_analysisdata$event
+)
+
+# 4. Fit KM model
+km_fit_pam <- survfit(surv_objPAM ~ cluster_pam, data = oneyear_analysisdata)
+
+# 5. Plot KM curve
+km_plot_pam <- ggsurvplot(
+  fit = km_fit_pam,
+  data = oneyear_analysisdata,
+  palette = c("#1b9e77", "#d95f02", "red", "#7570b3"),
+  legend.title = "Cluster",
+  legend.labs = levels(oneyear_analysisdata$cluster_pam),
+  risk.table = TRUE,
+  xlim = c(0, 365),                         # Limit to 365 days
+  break.time.by = 90,                       # Tick marks at 0, 90, 180, 270, 360
+  censor = TRUE,
+  pval = TRUE,
+  conf.int = TRUE,
+  xlab = "Time (days)",
+  ylab = "Survival Probability",
+  title = "Cumulative Survival by Cluster (Censored for KT)",
+  risk.table.height = 0.35,
+  risk.table.fontsize = 3.5,
+  ggtheme = theme_minimal(base_size = 14) +
+    theme(
+      axis.line = element_line(color = "black"),
+      axis.ticks = element_line(color = "black"),
+      axis.text = element_text(color = "black"),
+      axis.title = element_text(color = "black")
+    )
+)
+
+km_plot_pam$plot <- km_plot_pam$plot +
+  scale_x_continuous(breaks = c(0, 90, 180, 270, 365)) # Adjust x-axis ticks
+
+print(km_plot_pam) # Show plot
+
+
+
+## Step 2: CIF for secondary outcomes with competing events:
+# 1. All-cause death
+oneyear_analysisdata <- oneyear_analysisdata %>%
+  mutate(
+    fstatus = case_when(
+      death_v1 == 1 ~ 1,             # any cause of death
+      transplant_v1 == 1 ~ 0,        # censored at transplant
+      TRUE ~ 0
+    ),
+    ftime = pmin(tto_death1, tto_kt1, 365, na.rm = TRUE)
+  )
+
+cuminc_death <- cuminc(ftime   = oneyear_analysisdata$ftime, fstatus = oneyear_analysisdata$fstatus, group   = oneyear_analysisdata$cluster_pam)
+print(cuminc_death)
+
+# This process is repeated for `Cause-specific death`, `MACE`, `Interventions for ASCVD`, `Hospitalisation for Heart failure`, `Hospitalisation for infections` and `Fractures`
+
+
+
+## Step 3: Incremental prediction model to test impact of cluster membership on the primary endpoint (death)
+# 1. Prepare Fine-Gray time and event variables
+oneyear_analysisdata <- oneyear_analysisdata %>%
+  mutate(
+    status_fg = case_when(
+      death_v1 == 1 ~ 1,  # Death = event
+      !is.na(tto_kt1) & tto_kt1 <= 365 ~ 2,  # KT = competing risk
+      TRUE ~ 0  # Censored
+    ),
+    time_fg = pmin(tto_death1, tto_kt1, 365, na.rm = TRUE)
+  )
+
+# 3. Add dummy for Cluster 3 (no imputation needed)
+finegray_data <- oneyear_analysisdata %>%
+  mutate(
+    cluster3_vs_rest = {
+      cl <- as.character(cluster_pamGOWER)
+      as.integer(grepl("(^3$)|3$", cl) | grepl("^Cluster\\s*3$", cl))
+    }
+  )
+
+# 4. Design matrices for Models 1–5 (same as before)
+X1 <- model.matrix(~ age_v0 + gender + dialysisvintage_v0 + diabetes_v0 + cad_v0, data = finegray_data)[, -1]
+X2 <- model.matrix(~ age_v0 + gender + dialysisvintage_v0 + diabetes_v0 + cad_v0 +
+                     crp_v0 + alp_v0 + albumin_v0 + phosphate_v0 + ipth_immundiagnostik_v0, data = finegray_data)[, -1]
+X3 <- model.matrix(~ age_v0 + gender + dialysisvintage_v0 + diabetes_v0 + cad_v0 +
+                     crp_v0 + alp_v0 + albumin_v0 + phosphate_v0 + ipth_immundiagnostik_v0 +
+                     noxpthdil_v0 + beta_crosslaps_v0 + opg_v0 + lmanox_v0 + perox_v0 + srankl_v0, data = finegray_data)[, -1]
+
+X4 <- model.matrix(~ age_v0 + gender + dialysisvintage_v0 + diabetes_v0 + cad_v0 +
+                     crp_v0 + alp_v0 + albumin_v0 + phosphate_v0 + ipth_immundiagnostik_v0 +
+                     cluster3_vs_rest, data = finegray_data)[, -1]
+X5 <- model.matrix(~ age_v0 + gender + dialysisvintage_v0 + diabetes_v0 + cad_v0 +
+                     crp_v0 + alp_v0 + albumin_v0 + phosphate_v0 + ipth_immundiagnostik_v0 +
+                     noxpthdil_v0 + beta_crosslaps_v0 + opg_v0 + lmanox_v0 + perox_v0 + srankl_v0 +
+                     cluster3_vs_rest, data = finegray_data)[, -1]
+
+# 5. Fit models
+fg_model1 <- crr(ftime = finegray_data$time_fg, fstatus = finegray_data$status_fg, cov1 = X1)
+fg_model2 <- crr(ftime = finegray_data$time_fg, fstatus = finegray_data$status_fg, cov1 = X2)
+fg_model3 <- crr(ftime = finegray_data$time_fg, fstatus = finegray_data$status_fg, cov1 = X3)
+fg_model4 <- crr(ftime = finegray_data$time_fg, fstatus = finegray_data$status_fg, cov1 = X4)
+fg_model5 <- crr(ftime = finegray_data$time_fg, fstatus = finegray_data$status_fg, cov1 = X5)
+
+# and write summaries
+summary(fg_model1)
+summary(fg_model2)
+summary(fg_model3)
+summary(fg_model4)
+summary(fg_model5)
