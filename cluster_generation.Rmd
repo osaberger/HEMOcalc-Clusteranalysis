@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ## PAM Cluster analysis for one-year FU data
 
 # Import and list relevant libraries
+```{r echo=FALSE}
   library(tidyverse)
   library(cluster)
   library(factoextra)
@@ -22,10 +23,12 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
   library(scales)
   library(writexl)
   library(here)
+```
 
 ### Set up working directory and import data
+```{r echo=FALSE}
 oneyear_analysisdata <- read.csv("Cdata_clean.csv")
-
+```
 
 
 ### Step 1: Subset clustering variables, Winsorize, and center-level standardization
