@@ -22,13 +22,13 @@ date: "2025-10-23"
 ```
 
 ### Set up working directory and import data
-```{r echo=FALSE}
+```{r}
 oneyear_analysisdata <- read.csv("Cdata_clean.csv")
 ```
 
 
 ### Step 1: Subset clustering variables, Winsorize, and center-level standardization
-```{r echo=FALSE}
+```{r}
 clustering_variables <- oneyear_analysisdata %>%
   mutate(across(
     c(noxpth_v0, beta_crosslaps_v0, opg_v0,
@@ -50,7 +50,7 @@ clustering_variables <- oneyear_analysisdata %>%
 ```
 
 ### Step 2: Distance computation and clustering
-```{r echo=FALSE}
+```{r}
 # 1. Apply gower distance matrix (equals Manhattan on numeric variables)
 gower_dist <- daisy(clustering_variables, metric = "gower")
 
@@ -76,7 +76,7 @@ save(oneyear_analysisdata, pam_resultGOWER, file = "cluster_results.RData")
 ```
 
 ### Step 3: Cluster stability check with bootstrap
-```{r echo=FALSE}
+```{r}
 # clusterboot can be slow. For exploratory runs use B = 200. Increase to 1000+ for final stability estimates.
 b_result <- clusterboot(
   data = clustering_variables,
@@ -91,7 +91,7 @@ cat("Mean bootstrap cluster stability:", mean(cb_result$bootmean), "\n")
 ```
 
 ### Step 4: Create radar charts for all clusters
-```{r echo=FALSE}
+```{r}
 # 1. Variables, colors and labels used for radar charts
 radarchart_vars <- c("noxpth_v0", "beta_crosslaps_v0",
                      "opg_v0", "lmanox_v0", "perox_v0", "srankl_v0", "crp_v0")
@@ -135,4 +135,4 @@ for (i in seq_len(n_clusters)) {
     title = cluster_labels[i]
   )
 }
-````
+```

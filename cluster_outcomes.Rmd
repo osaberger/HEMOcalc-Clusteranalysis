@@ -17,15 +17,15 @@ library(tidyverse)
 library(cmprsk)
 library(MASS)
 library(viridis)
-````
+```
 
 # Load results
-```{r echo=FALSE}
+```{r}
 load("cluster_results.RData")
 ```
 
 ## Step 1: Kaplan-Meier Survival Analysis (cesnored for KT) between PAM clusters
-```{r echo=FALSE}
+```{r}
 # 1. Get events
 oneyear_analysisdata <- oneyear_analysisdata %>%
   mutate(
@@ -83,7 +83,7 @@ print(km_plot_pam) # Show plot
 
 
 ## Step 2: CIF for secondary outcomes with competing events:
-```{r echo=FALSE}
+```{r}
 # 1. All-cause death
 oneyear_analysisdata <- oneyear_analysisdata %>%
   mutate(
@@ -104,7 +104,7 @@ print(cuminc_death)
 
 
 ## Step 3: Incremental prediction model to test impact of cluster membership on the primary endpoint (death)
-```{r echo=FALSE}
+```{r}
 # 1. Prepare Fine-Gray time and event variables
 oneyear_analysisdata <- oneyear_analysisdata %>%
   mutate(

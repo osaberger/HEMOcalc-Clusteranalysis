@@ -5,12 +5,11 @@ author: Simon Aberger
 date: "2025-10-23"
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 ## Sensitivity analysis: Leave one center out (LOCO)
 
+# Import and list relevant libraries
+```{r echo=FALSE}
 library(tidyverse)
 library(cluster)
 library(DescTools)     # For Winsorize
@@ -25,13 +24,17 @@ library(fmsb)
 library(scales)
 library(writexl)
 library(ggalluvial)
+```
 
 # Set random seed and define variables:
+```{r}
 set.seed(1)
 vars <- c("noxpth_v0", "beta_crosslaps_v0", "opg_v0",
           "lmanox_v0", "perox_v0", "srankl_v0", "crp_v0")
+```
 
 ## Step 1: Define helper function to preprocess training and test data
+```{r}
 # 1. Set up training data for centers:
 prep_data <- function(train_df, test_df, vars) {
   train_w <- train_df %>%
@@ -73,10 +76,11 @@ predict_pam <- function(newdata, pam_obj, train_z) {
   d_to_medoids <- dmat[1:m, (m+1):nrow(dmat), drop = FALSE]
   apply(d_to_medoids, 2, which.min)
 }
-
+```
 
 
 ## Step 2: Cluster the full dataset (used as reference in ARI comparisons)
+```{r}
 clustering_variables_full <- oneyear_analysisdata %>%
   dplyr::select(all_of(vars)) %>%
   mutate(across(everything(), ~ Winsorize(as.numeric(.),
@@ -89,10 +93,11 @@ clustering_variables_full <- oneyear_analysisdata %>%
 gower_full <- daisy(clustering_variables_full, metric = "gower")
 pam_full   <- pam(gower_full, k = 4, diss = TRUE)
 oneyear_analysisdata$cluster_full <- factor(pam_full$clustering)
-
+```
 
 
 ## Step 3: Leave-One-Center-Out (LOCO) validation of clustering stability
+```{r}
 centers <- sort(unique(oneyear_analysisdata$center))
 
 results <- map_dfr(centers, function(ct) {
@@ -135,10 +140,11 @@ results <- map_dfr(centers, function(ct) {
 })
 
 results %>% adorn_rounding(digits = 3)
-
+```
 
 
 ## Step 4: Solution - Standardize lab markers within each center
+```{r}
 # 1. Center-standardize lab markers within each center
 oneyear_analysisdata_centered <- oneyear_analysisdata %>%
   group_by(center) %>%
@@ -207,4 +213,4 @@ results_centered <- map_dfr(centers, function(ct) {
 
 # 6. View rounded validation metrics
 results_centered %>% adorn_rounding(digits = 3)
-
+```
