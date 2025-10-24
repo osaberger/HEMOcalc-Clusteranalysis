@@ -3,10 +3,10 @@
 This is the structure of the main file:
 
 ### Structure
-| **Name** | **id** | **center** | **date_v0** | **date_v1** | **tto_v1** | **ltfu** | **transplant** | **death_v1** | **date_ltfu** | **date_transplant** | **date_death** | **tto_ltfu** | **tto_transplant** | **tto_death** |
+| **Name** | **id** | **center** | **date v0** | **date v1** | **FU time** | **ltfu** | **transplant** | **death** | **date ltfu, transplant, death** | **time to ltfu, transplant, death** | **age** | **gender** |
 |-----------|---------|-------------|--------------|--------------|-------------|------------|----------------|---------------|----------------|--------------------|----------------|----------------|--------------------|---------------|
-| **Class** | string | string | date | date | numeric | logical | logical | logical | date | date | date | numeric | numeric | numeric |
-| **Information** | Patient identifier | ID number | Baseline date (yyyy-mm-dd) | Follow-up date (yyyy-mm-dd) | Time to visit 1 (days) | Lost to follow-up (TRUE/FALSE) | Transplant (TRUE/FALSE) | Death at visit 1 (TRUE/FALSE) | Date of LTFU | Date of transplant | Date of death | Time to LTFU (days) | Time to transplant (days) | Time to death (days) |
+| **Class** | string | string | date | date | numeric | logical | logical | logical | date | numeric | numeric | string |
+| **Information** | Patient identifier | ID number | (yyyy-mm-dd) | (yyyy-mm-dd) | (days) | (TRUE/FALSE) | Date of LTFU | Date of transplant | (yyyy-mm-dd) | (days) | (years) | (M/F) |
 
 
 
